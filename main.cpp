@@ -8,16 +8,22 @@ enum tokens {
     RETURN,
     INT_LIT,
     SEMI,
-    INVALID
+    INVALID,
+    EQUAL,
+    STRING,
+    LET
 };
 
 class Token {
     public:
         tokens type;
         int value;
+        std::string val;
 
-        Token(const tokens& n) : type(n), value(0) {}
-        Token(const tokens& n, int a) : type(n), value(a) {}
+        Token(const tokens& n) : type(n), value(0), val("") {}
+        Token(const tokens& n, int a) : type(n), value(a), val("") {}
+        Token(const tokens& n, std::string s) : type(n), value(0), val(s) {}
+        Token(const tokens& n, int a, std::string s) : type(n), value(a), val(s) {}
 };
 
 std::vector<Token> getTokens(std::string str) {
@@ -33,7 +39,13 @@ std::vector<Token> getTokens(std::string str) {
             }
             if(buf == "return") {
                 token_list.push_back({ RETURN });
+            } else if( buf == "let") {
+                token_list.push_back({ LET });
+            } else {
+                token_list.push_back({ STRING, buf });
             }
+            i--;
+            std::cout << "buf: " << buf << " i: " << i << std::endl;
             buf = "";
         } else if(isdigit(c)) {
             buf += c;
@@ -47,6 +59,10 @@ std::vector<Token> getTokens(std::string str) {
             buf += c;
             token_list.push_back({ SEMI });
             buf = "";
+        } else if(c == '=') {
+            buf += c;
+            token_list.push_back({ EQUAL });
+            buf = "";
         } else if(isspace(c)) {
             continue;
         } else {
@@ -59,22 +75,57 @@ std::vector<Token> getTokens(std::string str) {
     return token_list;
 }
 
-std::string usingTokens(std::vector<Token> t) {
-    std::string asmCode;
-    asmCode = "global _start\n\n_start:\n";
-
+std::string code(std::vector<Token> t) {
+    std::string code;
     for(int i = 0; i < t.size(); i++) {
+        std::cout << i << " " << t.size() << std::endl;
         if(t[i].type == RETURN){
             if(i + 2 < t.size()) {
                 if(t[i + 1].type == INT_LIT && t[i + 2].type == SEMI) {
-                    std::cout << i << " " << t[i].type << " " << t[i].value << std::endl;
-                    asmCode += "    mov rax, 60\n    mov rdi, ";
-                    asmCode += std::to_string(t[i + 1].value);
-                    asmCode += "\n    syscall";
+                    code += "    mov rax, 60\n    mov rdi, ";
+                    code += std::to_string(t[i + 1].value);
+                    code += "\n    syscall";
+                    i+=2;
+                } else if (t[i + 1].type == STRING && t[i + 2].type == SEMI) {
+                    code += "    mov rax, 60\n    mov edi, dword [";
+                    code += t[i + 1].val;
+                    code += "]\n    syscall";
+                    i+=2;
+                }
+            } else {
+                std::cerr << "return used withut an error return value" << std::endl;
+                break;
+            }
+        }
+    }
+    return code;
+}
+
+
+std::string variables(std::vector<Token> t) {
+    std::string code;
+    for(int i = 0; i < t.size(); i++) {
+    if(t[i].type == LET) {
+            if(i + 4 < t.size()) {
+                if(t[i+1].type == STRING && t[i+2].type == EQUAL && t[i+3].type == INT_LIT && t[i+4].type == SEMI) {
+                    //std::cout << i << " " << t[i].type << " " << t[i].value << std::endl;
+                    code += (t[i+1].val + " dd " + std::to_string(t[i+3].value));
+                    i += 4;
                 }
             }
         }
     }
+    return code;
+}
+
+std::string usingTokens(std::vector<Token> t) {
+    std::string asmCode;
+    asmCode = "section .data\n";
+    asmCode += variables(t);
+    asmCode += "\nsection .text\n";
+    asmCode += "global _start\n\n";
+    asmCode += "_start:\n";
+    asmCode += code(t);
 
     return asmCode;
 }
@@ -86,12 +137,12 @@ int main(int argc, char* argv[]) {
     std::string code((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));;
 
     std::vector<Token> found = getTokens(code);
-    //for(int i = 0; i < found.size(). i++) {
-      //  std::cout << "type: " << found[i].type << " value: " <
-    //}
+    for(int i = 0; i < found.size(); i++) {
+          std::cout << "type: " << found[i].type << " value: " << found[i].value << " val: " << found[i].val << std::endl;
+    }
 
     {
-        std::ofstream asmFile("./asm/main.asm");
+        std::ofstream asmFile("./asm/main1.asm");
         asmFile << usingTokens(found);
     }
 

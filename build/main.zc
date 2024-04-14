@@ -1,1 +1,2 @@
-return 122;
+let xter = 17;
+return xter;
