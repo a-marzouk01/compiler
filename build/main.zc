@@ -1,2 +1,3 @@
-let xter = 17;
-return xter;
+let xter = "hello";
+print(xter);
+return 1;
