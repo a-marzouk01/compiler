@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <vector>
 
 enum tokens {
@@ -92,6 +93,16 @@ std::vector<Token> getTokens(std::string str) {
     return token_list;
 }
 
+std::string sysVars;
+int sysVarC = 0;
+
+std::string addSysVar(std::string s) {
+    std::string name = "sysvar" + std::to_string(sysVarC);
+    sysVars += name + " db \"" + s + "\", 0\n";
+    sysVarC++;
+    return name;
+}
+
 std::string code(std::vector<Token> t) {
     std::string code;
     for(int i = 0; i < t.size(); i++) {
@@ -115,7 +126,14 @@ std::string code(std::vector<Token> t) {
                 break;
             }
         } else if (t[i].type == PRINT) {
-            if(i + 4 < t.size()) {
+            if (i + 6 < t.size()) {
+                if(t[i+1].type == L_PAREN && t[i+2].type == QUOTES && t[i+3].type == STRING &&
+                        t[i+4].type == QUOTES && t[i+5].type == R_PAREN && t[i+6].type == SEMI) {
+                    std::string name = addSysVar(t[i+3].val);
+                    code += ("    mov rax, 1\n    mov rdi, 1\n    mov rsi, " + name +
+                            "\n    mov rdx, " + std::to_string(t[i+3].val.length() + 1) + "\n    syscall\n\n");
+                }
+            }else if(i + 4 < t.size()) {
                 if(t[i+1].type == L_PAREN && t[i+2].type == STRING && t[i+3].type == R_PAREN && t[i+4].type == SEMI) {
                     code += ("    mov rax, 1\n    mov rdi, 1\n    mov rsi, " +
                             t[i+2].val + "\n    mov rdx, " + std::to_string(t[i+2].val.length() + 1) +
@@ -177,6 +195,28 @@ int main(int argc, char* argv[]) {
     {
         std::ofstream asmFile("./asm/main1.asm");
         asmFile << usingTokens(found);
+    }
+
+    {
+        std::cout << std::endl << std::endl << sysVars;
+        std::ifstream asmFile("./asm/main1.asm");
+        std::ostringstream oss;
+
+        std::string line;
+        bool foundLine = false;
+
+        while (std::getline(asmFile, line)) {
+            oss << line << std::endl;
+            if (line.find("section .data") != std::string::npos) {
+                oss << sysVars << std::endl;
+                foundLine = true;
+            }
+        }
+        asmFile.close();
+
+        std::ofstream asmFile1("./asm/main1.asm");
+
+        asmFile1 << oss.str();
     }
 
     return 0;

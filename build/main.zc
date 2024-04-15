@@ -1,3 +1,2 @@
-let xter = "hello";
-print(xter);
+print("hello");
 return 1;

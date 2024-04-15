@@ -189,6 +189,8 @@ CMakeFiles/compiler.dir/main.cpp.o: /home/nyovel/workspace/projects/compiler/mai
   /usr/include/x86_64-linux-gnu/c++/12/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/12/bits/c++io.h \
   /usr/include/c++/12/bits/fstream.tcc \
+  /usr/include/c++/12/sstream \
+  /usr/include/c++/12/bits/sstream.tcc \
   /usr/include/c++/12/vector \
   /usr/include/c++/12/bits/stl_uninitialized.h \
   /usr/include/c++/12/bits/stl_vector.h \
@@ -201,6 +203,8 @@ CMakeFiles/compiler.dir/main.cpp.o: /home/nyovel/workspace/projects/compiler/mai
 /usr/include/c++/12/bits/stl_vector.h:
 
 /usr/include/c++/12/bits/stl_uninitialized.h:
+
+/usr/include/c++/12/sstream:
 
 /usr/include/c++/12/bits/fstream.tcc:
 
@@ -265,6 +269,8 @@ CMakeFiles/compiler.dir/main.cpp.o: /home/nyovel/workspace/projects/compiler/mai
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
 
 /usr/include/x86_64-linux-gnu/bits/waitflags.h:
+
+/usr/include/c++/12/bits/sstream.tcc:
 
 /usr/include/x86_64-linux-gnu/bits/byteswap.h:
 

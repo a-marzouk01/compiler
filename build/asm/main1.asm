@@ -1,5 +1,7 @@
 section .data
-xter db "hello", 0
+sysvar0 db "hello", 0
+
+
 
 section .text
 global _start
@@ -7,8 +9,8 @@ global _start
 _start:
     mov rax, 1
     mov rdi, 1
-    mov rsi, xter
-    mov rdx, 5
+    mov rsi, sysvar0
+    mov rdx, 6
     syscall
 
     mov rax, 60
