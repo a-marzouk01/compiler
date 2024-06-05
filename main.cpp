@@ -35,7 +35,7 @@ std::vector<Token> getTokens(std::string str) {
     std::vector<Token> token_list;
     std::string buf;
 
-    for(int i = 0; i < str.length(); i++) {
+    for(int i = 0; i < str.length(); i++) { // O(n)
         char c = str[i];
         if(isalpha(c)) {
             buf += c;
@@ -81,7 +81,7 @@ std::vector<Token> getTokens(std::string str) {
             buf += c;
             token_list.push_back({ QUOTES });
             buf = "";
-        } else if(isspace(c)) {
+        } else if(isspace(c)) { 
             continue;
         } else {
             token_list.push_back({ INVALID });
@@ -107,15 +107,17 @@ std::string code(std::vector<Token> t) {
     std::string code;
     for(int i = 0; i < t.size(); i++) {
         if(t[i].type == RETURN){
+            //let hello = 70;
+            //reutrn hello;
             if(i + 2 < t.size()) {
                 if(t[i + 1].type == INT_LIT && t[i + 2].type == SEMI) {
-                    std::cout << i << " " << t.size() << std::endl;
+                    //std::cout << i << " " << t.size() << std::endl;
                     code += "    mov rax, 60\n    mov rdi, ";
                     code += std::to_string(t[i + 1].value);
                     code += "\n    syscall";
                     i+=2;
                 } else if (t[i + 1].type == STRING && t[i + 2].type == SEMI) {
-                    std::cout << i << " " << t.size() << std::endl;
+                    //std::cout << i << " " << t.size() << std::endl;
                     code += "    mov rax, 60\n    mov edi, dword [";
                     code += t[i + 1].val;
                     code += "]\n    syscall";
@@ -125,7 +127,8 @@ std::string code(std::vector<Token> t) {
                 std::cerr << "return used withut an error return value" << std::endl;
                 break;
             }
-        } else if (t[i].type == PRINT) {
+        }  if (t[i].type == PRINT) {
+            std::cout << i << " " << t.size() << std::endl;
             if (i + 6 < t.size()) {
                 if(t[i+1].type == L_PAREN && t[i+2].type == QUOTES && t[i+3].type == STRING &&
                         t[i+4].type == QUOTES && t[i+5].type == R_PAREN && t[i+6].type == SEMI) {
@@ -133,7 +136,7 @@ std::string code(std::vector<Token> t) {
                     code += ("    mov rax, 1\n    mov rdi, 1\n    mov rsi, " + name +
                             "\n    mov rdx, " + std::to_string(t[i+3].val.length() + 1) + "\n    syscall\n\n");
                 }
-            }else if(i + 4 < t.size()) {
+            }if(i + 4 < t.size()) {
                 if(t[i+1].type == L_PAREN && t[i+2].type == STRING && t[i+3].type == R_PAREN && t[i+4].type == SEMI) {
                     code += ("    mov rax, 1\n    mov rdi, 1\n    mov rsi, " +
                             t[i+2].val + "\n    mov rdx, " + std::to_string(t[i+2].val.length() + 1) +
@@ -151,12 +154,14 @@ std::string variables(std::vector<Token> t) {
     std::string code;
     for(int i = 0; i < t.size(); i++) {
         if(t[i].type == LET) {
+            //let myvar = 50;
             if(i + 4 < t.size()) {
                 if(t[i+1].type == STRING && t[i+2].type == EQUAL && t[i+3].type == INT_LIT && t[i+4].type == SEMI) {
                     code += (t[i+1].val + " dd " + std::to_string(t[i+3].value));
                     i += 4;
                 }
             }
+            //let myvar = "hello";
             if(i + 6 < t.size()) {
                 if(t[i+1].type == STRING && t[i+2].type == EQUAL && t[i+3].type == QUOTES && t[i+4].type == STRING
                         && t[i+5].type == QUOTES && t[i+6].type == SEMI) {
