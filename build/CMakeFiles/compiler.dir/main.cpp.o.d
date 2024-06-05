@@ -1,6 +1,6 @@
 CMakeFiles/compiler.dir/main.cpp.o: \
  /home/nyovel/workspace/projects/compiler/main.cpp \
- /usr/include/stdc-predef.h /usr/include/c++/12/cctype \
+ /usr/include/stdc-predef.h /usr/include/c++/12/iostream \
  /usr/include/x86_64-linux-gnu/c++/12/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/12/bits/os_defines.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -11,15 +11,7 @@ CMakeFiles/compiler.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
  /usr/include/x86_64-linux-gnu/c++/12/bits/cpu_defines.h \
- /usr/include/c++/12/pstl/pstl_config.h /usr/include/ctype.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h \
- /usr/include/x86_64-linux-gnu/bits/time64.h \
- /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/endianness.h \
- /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
- /usr/include/c++/12/iostream /usr/include/c++/12/ostream \
+ /usr/include/c++/12/pstl/pstl_config.h /usr/include/c++/12/ostream \
  /usr/include/c++/12/ios /usr/include/c++/12/iosfwd \
  /usr/include/c++/12/bits/stringfwd.h \
  /usr/include/c++/12/bits/memoryfwd.h /usr/include/c++/12/bits/postypes.h \
@@ -35,6 +27,8 @@ CMakeFiles/compiler.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/c++/12/exception /usr/include/c++/12/bits/exception.h \
  /usr/include/c++/12/bits/exception_ptr.h \
  /usr/include/c++/12/bits/exception_defines.h \
@@ -45,12 +39,17 @@ CMakeFiles/compiler.dir/main.cpp.o: \
  /usr/include/c++/12/bits/nested_exception.h \
  /usr/include/c++/12/bits/char_traits.h /usr/include/c++/12/cstdint \
  /usr/lib/gcc/x86_64-linux-gnu/12/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+ /usr/include/x86_64-linux-gnu/bits/time64.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/c++/12/bits/localefwd.h \
  /usr/include/x86_64-linux-gnu/c++/12/bits/c++locale.h \
  /usr/include/c++/12/clocale /usr/include/locale.h \
- /usr/include/x86_64-linux-gnu/bits/locale.h \
+ /usr/include/x86_64-linux-gnu/bits/locale.h /usr/include/c++/12/cctype \
+ /usr/include/ctype.h /usr/include/x86_64-linux-gnu/bits/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endianness.h \
  /usr/include/c++/12/bits/ios_base.h /usr/include/c++/12/ext/atomicity.h \
  /usr/include/x86_64-linux-gnu/c++/12/bits/gthr.h \
  /usr/include/x86_64-linux-gnu/c++/12/bits/gthr-default.h \
@@ -148,13 +147,4 @@ CMakeFiles/compiler.dir/main.cpp.o: \
  /usr/include/c++/12/bits/locale_facets.tcc \
  /usr/include/c++/12/bits/basic_ios.tcc \
  /usr/include/c++/12/bits/ostream.tcc /usr/include/c++/12/istream \
- /usr/include/c++/12/bits/istream.tcc /usr/include/c++/12/fstream \
- /usr/include/c++/12/bits/codecvt.h \
- /usr/include/x86_64-linux-gnu/c++/12/bits/basic_file.h \
- /usr/include/x86_64-linux-gnu/c++/12/bits/c++io.h \
- /usr/include/c++/12/bits/fstream.tcc /usr/include/c++/12/sstream \
- /usr/include/c++/12/bits/sstream.tcc /usr/include/c++/12/vector \
- /usr/include/c++/12/bits/stl_uninitialized.h \
- /usr/include/c++/12/bits/stl_vector.h \
- /usr/include/c++/12/bits/stl_bvector.h \
- /usr/include/c++/12/bits/vector.tcc
+ /usr/include/c++/12/bits/istream.tcc

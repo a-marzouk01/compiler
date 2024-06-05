@@ -1,3 +1,0 @@
-let name = "ahmed";
-print(name);
-return 0;
