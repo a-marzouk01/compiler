@@ -1,227 +1,316 @@
 #include <cctype>
-#include <iostream>
+#include <cstddef>
+#include <cstdlib>
 #include <fstream>
+#include <iostream>
+#include <map>
 #include <string>
-#include <sstream>
 #include <vector>
 
-enum tokens {
-    RETURN,
-    INT_LIT,
-    SEMI,
-    INVALID,
+enum TokenType {
+    LEFT_PAREN,
+    RIGHT_PAREN,
+    LEFT_BRACE,
+    RIGHT_BRACE,
+    COMMA,
+    DOT,
+    MINUS,
+    PLUS,
+    SEMICOLON,
+    SLASH,
+    STAR,
+
+    BANG,
+    BANG_EQUAL,
     EQUAL,
+    EQUAL_EQUAL,
+    GREATER,
+    GREATER_EQUAL,
+    LESS,
+    LESS_EQUAL,
+
+    IDENTIFIER,
     STRING,
-    LET,
+    NUMBER,
+
+    AND,
+    CLASS,
+    ELSE,
+    FALSE,
+    FUN,
+    FOR,
+    IF,
+    NIL,
+    OR,
     PRINT,
-    L_PAREN,
-    R_PAREN,
-    QUOTES
+    RETURN,
+    SUPER,
+    THIS,
+    TRUE,
+    VAR,
+    WHILE,
+
+    EOF_TOKEN
 };
+
+bool hadError = false;
+
+void reporter(int line, std::string where, std::string message) {
+    std::cerr << "[line " << line << "] Error" << where << ": " << message
+        << std::endl;
+    hadError = true;
+}
+
+void error(int line, std::string message) { reporter(line, "", message); }
 
 class Token {
-    public:
-        tokens type;
-        int value;
-        std::string val;
+private:
+    TokenType type;
+    std::string lexeme;
+    void *literal;
+    int line;
 
-        Token(const tokens& n) : type(n), value(0), val("") {}
-        Token(const tokens& n, int a) : type(n), value(a), val("") {}
-        Token(const tokens& n, std::string s) : type(n), value(0), val(s) {}
-        Token(const tokens& n, int a, std::string s) : type(n), value(a), val(s) {}
+public:
+    Token(TokenType type, std::string lexeme, void *literal, int line)
+    : type(type), lexeme(lexeme), literal(literal), line(line) {}
+
+    void print() {
+        std::cout << "Token: " << "type: " << type << " lexme: " 
+            << lexeme << " literal: " << literal << " line: " << line << std::endl;
+    }
 };
 
-std::vector<Token> getTokens(std::string str) {
-    std::vector<Token> token_list;
-    std::string buf;
+class Scanner {
+private:
+    std::string source;
+    std::vector<Token> tokens;
 
-    for(int i = 0; i < str.length(); i++) { // O(n)
-        char c = str[i];
-        if(isalpha(c)) {
-            buf += c;
-            while(isalnum(str[++i])) {
-                buf += str[i];
-            }
-            if(buf == "return") {
-                token_list.push_back({ RETURN });
-            } else if( buf == "let") {
-                token_list.push_back({ LET });
-            } else if(buf == "print") {
-                token_list.push_back({ PRINT });
-            } else {
-                token_list.push_back({ STRING, buf });
-            }
-            i--;
-            buf = "";
-        } else if(isdigit(c)) {
-            buf += c;
-            while(isdigit(str[++i])) {
-                buf += str[i];
-            }
-            token_list.push_back({ INT_LIT, std::stoi(buf) });
-            buf = "";
-            i--;
-        } else if(c == ';') {
-            buf += c;
-            token_list.push_back({ SEMI });
-            buf = "";
-        } else if(c == '=') {
-            buf += c;
-            token_list.push_back({ EQUAL });
-            buf = "";
-        } else if(c == '(') {
-            buf += c;
-            token_list.push_back({ L_PAREN });
-            buf = "";
-        } else if(c == ')') {
-            buf += c;
-            token_list.push_back({ R_PAREN });
-            buf = "";
-        } else if(c == '"') {
-            buf += c;
-            token_list.push_back({ QUOTES });
-            buf = "";
-        } else if(isspace(c)) { 
-            continue;
+    std::map<std::string, TokenType> keywords = {
+        {"and", AND},
+        {"class", CLASS},
+        {"else", ELSE},
+        {"false", FALSE},
+        {"for", FOR},
+        {"fun", FUN},
+        {"if", IF},
+        {"nil", NIL},
+        {"or", OR},
+        {"print", PRINT},
+        {"return", RETURN},
+        {"super", SUPER},
+        {"this", THIS},
+        {"true", TRUE},
+        {"var", VAR},
+        {"while", WHILE}
+    };
+
+    int start = 0;
+    int current = 0;
+    int line = 1;
+
+    bool isAtEnd() { return current >= source.length(); }
+
+    char advance() { return source[current++]; }
+
+    void addToken(TokenType type) { 
+        addToken(type, nullptr);
+    }
+
+    void addToken(TokenType type, void *literal) {
+        std::string text = source.substr(start, current - start);
+        tokens.push_back(Token(type, text, literal, line));
+    }
+
+    bool match(char expected) {
+        if (isAtEnd()) return false;
+        if (source[current] != expected) return false;
+
+        current++;
+        return true;
+    }
+
+    char peek() {
+        if (isAtEnd()) return '\0';
+        return source[current];
+    }
+
+    char peekNext() {
+        if (current + 1 >= source.length()) return '\0';
+        return source[current + 1];
+    } 
+
+    TokenType get(const std::string &text) {
+        auto it = keywords.find(text);
+        if (it != keywords.end()) {
+            return it->second;
         } else {
-            token_list.push_back({ INVALID });
-            std::cerr << "FOUND AN INVALID, at i = " << i << std::endl;
-            break;
+            return IDENTIFIER;
         }
     }
 
-    return token_list;
-}
+    void string() {
+        while (peek() != '"' && !isAtEnd()) {
+            if(peek() == '\n') line++;
+            advance();
+        }
 
-std::string sysVars;
-int sysVarC = 0;
+        if (isAtEnd()) {
+            error(line, "Unterminated string");
+            return;
+        }
 
-std::string addSysVar(std::string s) {
-    std::string name = "sysvar" + std::to_string(sysVarC);
-    sysVars += name + " db \"" + s + "\", 0\n";
-    sysVarC++;
-    return name;
-}
+        advance();
 
-std::string code(std::vector<Token> t) {
-    std::string code;
-    for(int i = 0; i < t.size(); i++) {
-        if(t[i].type == RETURN){
-            //let hello = 70;
-            //reutrn hello;
-            if(i + 2 < t.size()) {
-                if(t[i + 1].type == INT_LIT && t[i + 2].type == SEMI) {
-                    //std::cout << i << " " << t.size() << std::endl;
-                    code += "    mov rax, 60\n    mov rdi, ";
-                    code += std::to_string(t[i + 1].value);
-                    code += "\n    syscall";
-                    i+=2;
-                } else if (t[i + 1].type == STRING && t[i + 2].type == SEMI) {
-                    //std::cout << i << " " << t.size() << std::endl;
-                    code += "    mov rax, 60\n    mov edi, dword [";
-                    code += t[i + 1].val;
-                    code += "]\n    syscall";
-                    i+=2;
-                }
-            } else {
-                std::cerr << "return used withut an error return value" << std::endl;
+        std::string val = source.substr(start + 1, current - 2);
+        addToken(STRING, &val);
+    }
+
+    void digit() {
+        while(isdigit(peek())) advance();
+
+        if(peek() == '.' && isdigit(peekNext())) {
+            advance();
+            while (isdigit(peek())) { advance(); }
+        }
+
+        double num = std::stod(source.substr(start, current - 1));
+        addToken(NUMBER, &num);
+    }
+
+    void identifier() {
+        while (isalnum(peek())) advance();
+
+        std::string text = source.substr(start, current-1);
+        TokenType type = get(text);
+
+        addToken(type);
+    }
+
+    void scanToken() {
+        char c = advance();
+        switch (c) {
+            case '(':
+                addToken(LEFT_PAREN);
                 break;
-            }
-        }  if (t[i].type == PRINT) {
-            std::cout << i << " " << t.size() << std::endl;
-            if (i + 6 < t.size()) {
-                if(t[i+1].type == L_PAREN && t[i+2].type == QUOTES && t[i+3].type == STRING &&
-                        t[i+4].type == QUOTES && t[i+5].type == R_PAREN && t[i+6].type == SEMI) {
-                    std::string name = addSysVar(t[i+3].val);
-                    code += ("    mov rax, 1\n    mov rdi, 1\n    mov rsi, " + name +
-                            "\n    mov rdx, " + std::to_string(t[i+3].val.length() + 1) + "\n    syscall\n\n");
+            case ')':
+                addToken(RIGHT_PAREN);
+                break;
+            case '{':
+                addToken(LEFT_BRACE);
+                break;
+            case '}':
+                addToken(RIGHT_BRACE);
+                break;
+            case ',':
+                addToken(COMMA);
+                break;
+            case '.':
+                addToken(DOT);
+                break;
+            case '-':
+                addToken(MINUS);
+                break;
+            case '+':
+                addToken(PLUS);
+                break;
+            case ';':
+                addToken(SEMICOLON);
+                break;
+            case '*':
+                addToken(STAR);
+                break;
+
+            case '!':
+                addToken(match('=') ? BANG_EQUAL : BANG);
+                break;
+            case '=':
+                addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+                break;
+            case '<':
+                addToken(match('=') ? LESS_EQUAL : LESS);
+                break;
+            case '>':
+                addToken(match('=') ? GREATER_EQUAL : GREATER);
+                break;
+
+            case '/':
+                if (match('/')) {
+                    while (peek() != '\n' && !isAtEnd()) advance();
+                } else {
+                    addToken(SLASH);
                 }
-            }if(i + 4 < t.size()) {
-                if(t[i+1].type == L_PAREN && t[i+2].type == STRING && t[i+3].type == R_PAREN && t[i+4].type == SEMI) {
-                    code += ("    mov rax, 1\n    mov rdi, 1\n    mov rsi, " +
-                            t[i+2].val + "\n    mov rdx, " + std::to_string(t[i+2].val.length() + 1) +
-                            "\n    syscall\n\n");
-                    i+=4;
+                break;
+
+            case '"' : string(); break;
+
+            case ' ':
+            case '\r':
+            case '\t':
+                break;
+
+            case '\n':
+                line++;
+                break;
+            default:
+                if(isdigit(c)){
+                    digit();
+                    break;
+                } else if (isalpha(c)) {
+                    identifier();
+                } else {
+                    error(line, "Unexpected character.");
+                    break;
                 }
-            }
         }
     }
-    return code;
-}
 
+public:
+    Scanner(std::string source) : source(source) {}
 
-std::string variables(std::vector<Token> t) {
-    std::string code;
-    for(int i = 0; i < t.size(); i++) {
-        if(t[i].type == LET) {
-            //let myvar = 50;
-            if(i + 4 < t.size()) {
-                if(t[i+1].type == STRING && t[i+2].type == EQUAL && t[i+3].type == INT_LIT && t[i+4].type == SEMI) {
-                    code += (t[i+1].val + " dd " + std::to_string(t[i+3].value));
-                    i += 4;
-                }
-            }
-            //let myvar = "hello";
-            if(i + 6 < t.size()) {
-                if(t[i+1].type == STRING && t[i+2].type == EQUAL && t[i+3].type == QUOTES && t[i+4].type == STRING
-                        && t[i+5].type == QUOTES && t[i+6].type == SEMI) {
-                    code += (t[i+1].val + " db \"" + t[i+4].val + "\", 0");
-                    i+=6;
-                }
-            }
+    std::vector<Token> scanTokens() {
+        while (!isAtEnd()) {
+            start = current;
+            scanToken();
         }
+
+        tokens.push_back(Token(EOF_TOKEN, "", nullptr, line));
+        return tokens;
     }
-    return code;
+};
+
+void run(const std::string source) {
+    Scanner scanner(source);
+    std::vector<Token> tokens = scanner.scanTokens();
+
+    for (Token token : tokens) {
+        token.print();
+    }
 }
 
-std::string usingTokens(std::vector<Token> t) {
-    std::string asmCode;
-    asmCode = "section .data\n";
-    asmCode += variables(t);
-    asmCode += "\n\nsection .text\n";
-    asmCode += "global _start\n\n";
-    asmCode += "_start:\n";
-    asmCode += code(t);
+void runFile(const char *filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Could not open file: " << filename << std::endl;
+        exit(74);
+    }
 
-    return asmCode;
+    std::vector<char> buffer{std::istreambuf_iterator<char>(file),
+        std::istreambuf_iterator<char>()};
+
+    run(std::string(buffer.begin(), buffer.end()));
+
+    if (hadError)
+        exit(65);
 }
 
-int main(int argc, char* argv[]) {
-    std::cout << argv[1] << std::endl;
-
-    std::ifstream file(argv[1]);
-    std::string code((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));;
-
-    std::vector<Token> found = getTokens(code);
-    for(int i = 0; i < found.size(); i++) {
-          std::cout << "type: " << found[i].type << " value: " << found[i].value << " val: " << found[i].val << " i: " << i << std::endl;
-    }
-
-    {
-        std::ofstream asmFile("./asm/main1.asm");
-        asmFile << usingTokens(found);
-    }
-
-    {
-        std::cout << std::endl << std::endl << sysVars;
-        std::ifstream asmFile("./asm/main1.asm");
-        std::ostringstream oss;
-
-        std::string line;
-        bool foundLine = false;
-
-        while (std::getline(asmFile, line)) {
-            oss << line << std::endl;
-            if (line.find("section .data") != std::string::npos) {
-                oss << sysVars << std::endl;
-                foundLine = true;
-            }
-        }
-        asmFile.close();
-
-        std::ofstream asmFile1("./asm/main1.asm");
-
-        asmFile1 << oss.str();
+int main(int argc, char *argv[]) {
+    if (argc > 2) {
+        std::cerr << "Usage: zc" << " [filename]" << std::endl;
+        exit(64);
+    } else if (argc == 2) {
+        runFile(argv[1]);
+    } else {
+        std::cout << "No file specified" << std::endl;
     }
 
     return 0;
